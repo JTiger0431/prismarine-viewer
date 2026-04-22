@@ -98,6 +98,50 @@ function resolveModel (name, blocksModels, texturesJson) {
   return model
 }
 
+function addBlockStateFallbacks (blockStates) {
+  const exactFallbacks = {
+    creaking_heart: 'oak_log',
+    stripped_pale_oak_log: 'stripped_oak_log',
+    stripped_pale_oak_wood: 'stripped_oak_wood',
+    potted_pale_oak_sapling: 'potted_oak_sapling',
+    resin_clump: 'honey_block',
+    resin_block: 'honey_block',
+    resin_bricks: 'bricks',
+    resin_brick_stairs: 'brick_stairs',
+    resin_brick_slab: 'brick_slab',
+    resin_brick_wall: 'brick_wall',
+    chiseled_resin_bricks: 'chiseled_stone_bricks',
+    pale_moss_block: 'moss_block',
+    pale_moss_carpet: 'moss_carpet',
+    pale_hanging_moss: 'hanging_roots',
+    open_eyeblossom: 'oxeye_daisy',
+    closed_eyeblossom: 'oxeye_daisy',
+    potted_open_eyeblossom: 'potted_oxeye_daisy',
+    potted_closed_eyeblossom: 'potted_oxeye_daisy'
+  }
+
+  for (const [name, fallbackName] of Object.entries(exactFallbacks)) {
+    if (!blockStates[name] && blockStates[fallbackName]) {
+      blockStates[name] = JSON.parse(JSON.stringify(blockStates[fallbackName]))
+    }
+  }
+
+  const prefixedFallbacks = [
+    ['pale_oak_', 'oak_']
+  ]
+
+  for (const [prefix, fallbackPrefix] of prefixedFallbacks) {
+    for (const [name, value] of Object.entries(blockStates)) {
+      if (!name.startsWith(fallbackPrefix)) continue
+
+      const candidate = prefix + name.slice(fallbackPrefix.length)
+      if (!blockStates[candidate]) {
+        blockStates[candidate] = JSON.parse(JSON.stringify(value))
+      }
+    }
+  }
+}
+
 function prepareBlocksStates (mcAssets, atlas) {
   const blocksStates = mcAssets.blocksStates
   mcAssets.blocksStates.missing_texture = {
@@ -113,6 +157,8 @@ function prepareBlocksStates (mcAssets, atlas) {
       all: 'blocks/missing_texture'
     }
   }
+  addBlockStateFallbacks(blocksStates)
+
   for (const block of Object.values(blocksStates)) {
     if (!block) continue
     if (block.variants) {
